@@ -19,9 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function saveTasks() {
         const tasks = [];
         taskList.querySelectorAll('li').forEach(li => {
-            // Get the text without the "Remove" button text
-            const taskText = li.firstChild.textContent.trim();
-            tasks.push(taskText);
+            tasks.push(li.dataset.task); // Use dataset to reliably store text
         });
         localStorage.setItem('tasks', JSON.stringify(tasks));
     }
@@ -36,6 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Create a list item
         const li = document.createElement('li');
         li.textContent = taskText;
+        li.dataset.task = taskText; // Store the original text in dataset
 
         // Create a remove button
         const removeBtn = document.createElement('button');
