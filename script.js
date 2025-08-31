@@ -1,70 +1,88 @@
 // Wait for the DOM to fully load
 document.addEventListener('DOMContentLoaded', () => {
-    // ----- Select DOM Elements -----
     const addButton = document.getElementById('add-task-btn');
     const taskInput = document.getElementById('task-input');
     const taskList = document.getElementById('task-list');
 
-    // ----- Add Task Function -----
-    function addTask(taskText = taskInput.value.trim(), save = true) {
-        // Check for empty input
+    // Load existing tasks from Local Storage when page loads
+    loadTasks();
+
+    // Function to load tasks from Local Storage
+    function loadTasks() {
+        const storedTasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+        storedTasks.forEach(task => {
+            addTask(task.text, false, task.completed); // pass completion state
+        });
+    }
+
+    // Function to save tasks to Local Storage
+    function saveTasks() {
+        const tasks = [];
+        taskList.querySelectorAll('li').forEach(li => {
+            tasks.push({
+                text: li.dataset.task,
+                completed: li.classList.contains('completed')
+            });
+        });
+        localStorage.setItem('tasks', JSON.stringify(tasks));
+    }
+
+    // Function to add a new task
+    function addTask(taskText = taskInput.value.trim(), save = true, completed = false) {
         if (taskText === '') {
             alert('Please enter a task.');
             return;
         }
 
-        // Create <li> element
+        // Create a list item
         const li = document.createElement('li');
         li.textContent = taskText;
+        li.dataset.task = taskText; // Store the original text in dataset
 
-        // Create Remove button
+        // Add completed class if true
+        if (completed) {
+            li.classList.add('completed');
+        }
+
+        // Toggle complete on click (not the remove button)
+        li.addEventListener('click', (e) => {
+            if (e.target.tagName !== 'BUTTON') {
+                li.classList.toggle('completed');
+                saveTasks();
+            }
+        });
+
+        // Create a remove button
         const removeBtn = document.createElement('button');
         removeBtn.textContent = 'Remove';
         removeBtn.className = 'remove-btn';
 
-        // Remove task on click
+        // Event to remove the task when remove button is clicked
         removeBtn.onclick = () => {
             taskList.removeChild(li);
-
-            // Update localStorage
-            const tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
-            const index = tasks.indexOf(taskText);
-            if (index !== -1) {
-                tasks.splice(index, 1);
-                localStorage.setItem('tasks', JSON.stringify(tasks));
-            }
+            saveTasks(); // Update Local Storage
         };
 
-        // Append button to <li>, and <li> to list
+        // Add button to the task and append to the list
         li.appendChild(removeBtn);
         taskList.appendChild(li);
 
-        // Clear input field
+        // Clear the input field
         taskInput.value = '';
 
-        // Save to localStorage (unless loading from storage)
+        // Save to Local Storage (unless loading from it)
         if (save) {
-            const tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
-            tasks.push(taskText);
-            localStorage.setItem('tasks', JSON.stringify(tasks));
+            saveTasks();
         }
     }
 
-    // ----- Load Tasks on Page Load -----
-    function loadTasks() {
-        const storedTasks = JSON.parse(localStorage.getItem('tasks') || '[]');
-        storedTasks.forEach(taskText => addTask(taskText, false)); 
-    }
-
-    // ----- Event Listeners -----
+    // Add task on button click
     addButton.addEventListener('click', () => addTask());
 
+    // Add task on Enter key press
     taskInput.addEventListener('keypress', (event) => {
         if (event.key === 'Enter') {
             addTask();
         }
     });
-
-    // Initialize tasks
-    loadTasks();
 });
